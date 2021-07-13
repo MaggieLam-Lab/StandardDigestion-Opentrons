@@ -10,18 +10,16 @@ metadata = {
 
 def run(protocol: protocol_api.ProtocolContext):
     # ---------------------------- CUSTOMIZE HERE ONLY ---------------------------- |
-    number_of_samples: int = 3
-    #sample_concentrations = [1.0, 1.0]  # Concentration of sample must be near 1ug/uL
-    replicates: int = 2
-    transfer_vol_peptides: float = 55.0
+    number_of_samples: int = 3   # specify the number of protein digest 
+    replicates: int = 2         # specify the number of replicates per sample
+    transfer_vol_peptides: float = 55.0 # specify the volume of digest to be processed; Each protein digest is about 120 uL and we split it into 2 cleanup reactions with each cleanup starting with 55 uL.
     volume_of_beads: float = 10.0  # Manually prepare beads for peptide binding prior to loading
     volume_of_ACN: float = 1292.0  # Volume of 100% ACN to be used during peptide binding phase; cannot exceed 1500uL
-    volume_of_DMSO: float = 80.0  # Manually prepare 
-    #mass_of_peptide: float = 55.0
+    volume_of_DMSO: float = 80.0  # Manually prepare 2% DMSO in MS water.
     total_samples = number_of_samples * replicates  # Total number of samples (including replicates) cannot exceed 48
-    #starting_tip_p50 = 'A1'  # change if full tip rack will not be used
-    #starting_tip_p300 = 'A1'  # change if full tip rack will not be used
-    starting_mag_well = 16  # 0 corresponds to 'A1' up to 95 corresponding to 'H12'
+    starting_tip_p50 = 'A1'  # change if full tip rack will not be used
+    starting_tip_p300 = 'A1'  # change if full tip rack will not be used
+    starting_mag_well = 0  # 0 corresponds to 'A1' up to 95 corresponding to 'H12'
 
     # | ---------------------------- ^^^^^^^^^^^^^^^^^^^ ---------------------------- |
     # ---------------------------- DO NOT EDIT BELOW THIS LINE ---------------------------- #
@@ -34,8 +32,8 @@ def run(protocol: protocol_api.ProtocolContext):
     # | ---------  pipettes --------- |
     p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300, tiprack_300_2])
     p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50])
-    #p50.starting_tip = tiprack_50.well(starting_tip_p50)
-    #p300.starting_tip = tiprack_300.well(starting_tip_p300)
+    p50.starting_tip = tiprack_50.well(starting_tip_p50)
+    p300.starting_tip = tiprack_300.well(starting_tip_p300)
     p300_aspirate_slow = 25  # Aspiration speed when removing supernatant
     p300_aspirate_default = 150  # Normal aspiration speed by default
     p300_aspirate_fast = 200
@@ -59,21 +57,6 @@ def run(protocol: protocol_api.ProtocolContext):
     samples = tuberack_2mL.wells()[:number_of_samples]
 
     # ---------------------------- COMMANDS ---------------------------- #
-    #Check for recommended ACN, peptide, and bead concentrations during sample binding
-    # for i in range(number_of_samples):
-    #     if volume_of_ACN / (transfer_vol_peptides + volume_of_ACN + volume_of_beads) < 0.95:
-    #         raise Exception(f'Concentration of ACN during sample binding should be >= 95%. '
-    #                         f'Reduce sample volume of sample {i+1} or increase volume of ACN.')
-    #     sample_conc_binding = mass_of_peptide / ((mass_of_peptide * sample_concentrations[i]) + volume_of_ACN
-    #                                              + volume_of_beads)
-    #     if sample_conc_binding < 0.01 or sample_conc_binding > 5:
-    #         raise Exception(f'Sample concentration during binding should be between 10 ug/mL and 5 mg/mL.'
-    #                         f'Sample {i+1} would be at a concentration of {sample_conc_binding} during binding.')
-    #     bead_conc_binding = (50 * volume_of_beads) / ((mass_of_peptide * sample_concentrations[i]) + volume_of_ACN
-    #                                                   + volume_of_beads)
-    #     if bead_conc_binding < 0.1:
-    #         raise Exception('Bead concentration binding should be >0.1 ug/uL for peptide binding.'
-    #                         'It is recommended to use 5-10ug of beads per ug of peptide. Increase bead volume.')
 
     # Check total number of samples and replicates
     if (starting_mag_well + total_samples > 95):
@@ -112,66 +95,41 @@ def run(protocol: protocol_api.ProtocolContext):
                 p300.drop_tip()
             curr_mix += 1
 
-    # Erin: this section is Cody's old script and I don't use this 
-    # Transfer defined mass of peptide from sample to the plate on magnetic module
-    # for i in range(len(samples)):
-    #     if transfer_vol_peptides > 50:
-    #         p3bottom00.transfer(
-    #             transfer_vol_peptides,
-    #             samples[i],
-    #             mag_plate.wells()[i * replicates + : i * replicates + replicates],
-    #             touch_tip=True,
-    #             new_tip='once',
-    #             blow_out=True,
-    #             blowout_location='destination well'
-    #         )
-    #     else:
-    #         p50.transfer(
-    #             transfer_vol,
-    #             samples[i],
-    #             mag_plate.wells()[i * replicates: i * replicates + replicates],
-    #             touch_tip=True,
-    #             new_tip='once',
-    #             blow_out=True,
-    #             blowout_location='destination well'
-    #         )
+
+     Transfer defined mass of peptide from sample to the plate on magnetic module
     
-    # Transfer defined mass of peptide from sample to the plate on magnetic module
-    
-    # for i in range(len(samples)):
-    #     p300.flow_rate.aspirate = p300_aspirate_slow
-    #     p300.flow_rate.dispense = p300_aspirate_slow   
-    #     p300.transfer(
-    #     transfer_vol_peptides,
-    #     samples[i],
-    #     mag_plate.wells()[i * replicates + starting_mag_well: i * replicates + replicates + starting_mag_well],
-    #     touch_tip=True,
-    #     new_tip='once',
-    #     blow_out=True,
-    #     blowout_location='destination well'
-    #     )
+     for i in range(len(samples)):
+         p300.flow_rate.aspirate = p300_aspirate_slow
+         p300.flow_rate.dispense = p300_aspirate_slow   
+         p300.transfer(
+         transfer_vol_peptides,
+         samples[i],
+         mag_plate.wells()[i * replicates + starting_mag_well: i * replicates + replicates + starting_mag_well],
+         touch_tip=True,
+         new_tip='once',
+         blow_out=True,
+         blowout_location='destination well'
+         )
        
-    # p300.flow_rate.aspirate = p300_aspirate_default
-    # p300.flow_rate.dispense = p300_aspirate_default
+     p300.flow_rate.aspirate = p300_aspirate_default
+     p300.flow_rate.dispense = p300_aspirate_default
 
-    # # # Transfer beads, then ACN to the tubes with peptide samples
-    # protocol.pause('Ensure prepared beads have been loaded into A6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
-    # # p50.flow_rate.aspirate = p50_aspirate_slow
-    # # p50.flow_rate.dispense = p50_aspirate_slow
-    # p50.flow_rate.aspirate = p50_aspirate_default
-    # p50.flow_rate.dispense = p50_aspirate_default
+     # Transfer beads, then ACN to the tubes with peptide samples
+     protocol.pause('Ensure prepared beads have been loaded into A6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
+     p50.flow_rate.aspirate = p50_aspirate_default
+     p50.flow_rate.dispense = p50_aspirate_default
 
-    # p50.transfer(
-    #     volume_of_beads,
-    #     beads,
-    #     mag_plate.wells()[starting_mag_well:total_samples + starting_mag_well],
-    #     mix_before=(5, 50),
-    #     mix_after=(5, 50),
-    #     new_tip='always',
-    #     touch_tip=True,
-    #     blow_out=True,
-    #     blowout_location='destination well'
-    # )
+     p50.transfer(
+         volume_of_beads,
+         beads,
+         mag_plate.wells()[starting_mag_well:total_samples + starting_mag_well],
+         mix_before=(5, 50),
+         mix_after=(5, 50),
+         new_tip='always',
+         touch_tip=True,
+         blow_out=True,
+         blowout_location='destination well'
+     )
 
     
     reagentTransfer(volume_of_ACN, ACN)

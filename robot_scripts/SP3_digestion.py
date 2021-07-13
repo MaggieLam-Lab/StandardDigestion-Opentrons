@@ -11,10 +11,10 @@ metadata = {
 
 def run(protocol: protocol_api.ProtocolContext):
     # ---------------------------- CUSTOMIZE HERE ONLY ---------------------------- |
-    number_of_samples: int = 1
-    # Length of sample_concentrations list must match the number of the samples above.
-    sample_concentrations = [5.00]  # Compatible protein sample concentration range: >2.0 ug/uL
-    replicates: int = 3
+    number_of_samples: int = 1 # Specify the number of protein samples 
+    
+    sample_concentrations = [5.00]  # specify the concentration of protein samples (unit is ug/uL); Length of sample_concentrations list must match the number of the samples above; separate concentrations with period sign if sample n>1 (e.g. sample_concentrations=[2.0, 2.5] if sample n=2).
+    replicates: int = 3 # specify the number of replicates for each sample
     volume_of_DTT: float = 10.0  # manually prepare 60mM DTT in MS-grade water
     volume_of_IAA: float = 10.0  # manually prepare 375mM IAA in MS-grade water
     volume_of_trypsin: float = 10.0  # manually prepare to a concentration of 0.2ug/uL
@@ -24,8 +24,8 @@ def run(protocol: protocol_api.ProtocolContext):
     volume_of_ethanol100: float = 140.0  # Volume of 100% ethanol to be used during protein binding phase
     volume_of_ethanol80: float = 1000.0  # Volume of 80% ethanol to be used for washes
     total_samples = number_of_samples * replicates  # Total number of samples (including replicates) cannot exceed 24
-    #starting_tip_p50 = 'A1'  # change if full tip rack will not be used
-    #starting_tip_p300 = 'A1'  # change if full tip rack will not be used
+    starting_tip_p50 = 'A1'  # change if full tip rack will not be used
+    starting_tip_p300 = 'A1'  # change if full tip rack will not be used
     starting_mag_well = 0  # 0 corresponds to 'A1' up to 95 corresponding to 'H12'
 
     # | ---------  tip racks --------- |
@@ -38,8 +38,8 @@ def run(protocol: protocol_api.ProtocolContext):
     #p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300])
     p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300, tiprack_300_2])
     p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50, tiprack_50_2])
-    #p50.starting_tip = tiprack_50.well(starting_tip_p50)
-    #p300.starting_tip = tiprack_300.well(starting_tip_p300)
+    p50.starting_tip = tiprack_50.well(starting_tip_p50)
+    p300.starting_tip = tiprack_300.well(starting_tip_p300)
     p300_aspirate_slow = 25  # Aspiration speed when removing supernatant
     p300_aspirate_default = 150  # Normal aspiration speed by default
 
@@ -125,18 +125,7 @@ def run(protocol: protocol_api.ProtocolContext):
                 blowout_location='destination well'
             )
 
-        # transfer 100ug of protein
-        # p50.transfer(
-        #     mass_of_protein / sample_concentrations[i],
-        #     samples[i],
-        #     temp_plate.wells()[i * replicates: i * replicates + replicates],
-        #     mix_after=(3, 50),
-        #     new_tip='always',
-        #     touch_tip=True,
-        #     blow_out=True,
-        #     blowout_location='destination well'
-        # )
-
+        # transfer 100ug of protein and mix 3 times with 50 uL volume
         if (mass_of_protein / sample_concentrations[i]) > 50:
             p300.transfer(
             mass_of_protein / sample_concentrations[i],
@@ -172,19 +161,18 @@ def run(protocol: protocol_api.ProtocolContext):
         blow_out=True,
         blowout_location='destination well'
     )
-    protocol.pause('Ensure to close tube caps.')
+    protocol.pause('Ensure to close caps on sample tubes.')
 
     # DTT incubation
     temp_mod.set_temperature(55)
     protocol.delay(minutes=5, msg='Pausing for 5 minutes to allow samples to reach tempeature.')
-    protocol.delay(minutes=incubation_time_DTT,
-                   msg=f'Incubating at 55 degrees for {incubation_time_DTT} minutes.')
+    protocol.delay(minutes=incubation_time_DTT, msg=f'Incubating at 55 degrees for {incubation_time_DTT} minutes.')
 
     # cool temp block and tubes to room temp prior to adding IAA to samples
     protocol.comment('Cooling down temp block.')
     temp_mod.set_temperature(22)
     protocol.delay(minutes=5, msg='Pausing for 5 minutes to allow tubes to cool down.')
-    protocol.pause('Ensure to open tube caps.')
+    protocol.pause('Ensure to open caps on sample tubes.')
 
     # transfer IAA to tubes on temp plate
     protocol.pause('Ensure IAA has been loaded into B6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
@@ -198,7 +186,7 @@ def run(protocol: protocol_api.ProtocolContext):
         blow_out=True,
         blowout_location='destination well'
     )
-    protocol.pause('Close caps and cover tubes with foil')
+    protocol.pause('Close caps on sample tubes and cover tubes with foil')
 
     # IAA incubation
     temp_mod.set_temperature(22)
@@ -208,19 +196,8 @@ def run(protocol: protocol_api.ProtocolContext):
     temp_mod.deactivate()
     protocol.pause('open tube caps')
 
-    #transfer protein solutions from tubes on the temp plate to the well plate for SP3 cleanup
-    # for i in range(number_of_samples):
-    #     p300.transfer(
-    #         120 * 1.1,
-    #         temp_plate.wells()[i * replicates: i * replicates + replicates],
-    #         mag_plate.wells()[i * replicates: i * replicates + replicates],
-    #         new_tip='always',
-    #         touch_tip=True,
-    #         blow_out=True,
-    #         blowout_location='destination well'
-    #     )
 
-    #the following section of protein transfer has not been tested on mag well plate with specified mag well position. 
+    #Transfer protein samples from tubes to the deep-well plate on magnetic module
     for i in range(total_samples):
         p300.transfer(
             120 * 1.1,
@@ -238,7 +215,6 @@ def run(protocol: protocol_api.ProtocolContext):
     p50.transfer(
         volume_of_beads,
         beads,
-        # mag_plate.wells()[:total_samples],
         mag_plate.wells()[starting_mag_well: total_samples + starting_mag_well],
         mix_before=(5, volume_of_beads),
         mix_after=(5, volume_of_beads),

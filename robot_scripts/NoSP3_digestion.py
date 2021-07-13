@@ -1,5 +1,4 @@
 from opentrons import protocol_api
-import datetime
 
 metadata = {
     'protocolName': 'Digestion Protocol 2mL Tubes',
@@ -11,16 +10,15 @@ metadata = {
 
 def run(protocol: protocol_api.ProtocolContext):
     # ---------------------------- CUSTOMIZE HERE ONLY ---------------------------- |
-    number_of_samples: int = 1  # Total number of samples (including replicates) cannot exceed 24
-    # Length of sample_concentrations list must match the number of the samples above.
-    sample_concentrations = [2.0]  # Compatible protein sample concentration range: >0.75 ug/uL -- CHANGE IN THE FUTURE
-    replicates: int = 9
+    number_of_samples: int = 1  # specify the number of protein samples
+    sample_concentrations = [2.0]  # specify the concentration of protein samples (unit is ug/uL);length of sample_concentrations list must match the number of the samples above;separate concentrations with period sign if sample n>1 (e.g. sample_concentrations=[2.0, 2.5] if sample n=2). 
+    replicates: int = 9         # specify the number of replicates
     volume_of_DTT: float = 10.0  # manually prepare 60mM DTT in MS-grade water
     volume_of_IAA: float = 10.0  # manually prepare 375mM IAA in MS-grade water
     volume_of_trypsin: float = 10.0  # manually prepare to a concentration of 0.2ug/uL
     incubation_time_DTT = 30  # in minutes
     incubation_time_IAA = 30  # in minutes
-    starting_tip_p50 = 'C1'  # change if full tip rack will not be used
+    starting_tip_p50 = 'A1'  # change if full tip rack will not be used
     starting_tip_p300 = 'A1'  # change if full tip rack will not be used
 
     # | ---------------------------- ^^^^^^^^^^^^^^^^^^^ ---------------------------- |
@@ -30,8 +28,7 @@ def run(protocol: protocol_api.ProtocolContext):
         raise ValueError('Length of sample_concentrations must match the integer specified for number_of_samples.')
     if number_of_samples * replicates > 24:
         raise ValueError('Total digests (including replicates) cannot exceed the number of slots available on the aluminum block (24).')
-    if any(sample_concentrations) < 1:  # CHANGE IN THE FUTURE
-        raise ValueError('Sample concentrations must be greater than 1 ug/uL.')  # CHANGE CONCENTRATION IN ERROR
+   
 
     # | ---------  tip racks --------- |
     tiprack_300 = protocol.load_labware('opentrons_96_tiprack_300ul', 2)
@@ -62,9 +59,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.pause('Ensure to change starting tip position for p50 and p300.')
 
     for i in range(number_of_samples):
-        # If sample concentration is greater than 1 ug/uL, transfer ABC then 100ug of sample to well plate for
-        # 100uL of 1 ug/uL sample. P300 is used to transfer ABC if ABC transfer volume is greater than 50uL.
-                  # transfer ABC
+        # transfer ABC
             if (100 - (100 / sample_concentrations[i])) > 50:
                 p300.transfer(
                     100 - (100 / sample_concentrations[i]),
@@ -82,7 +77,7 @@ def run(protocol: protocol_api.ProtocolContext):
                     touch_tip=True
                 )
 
-    #       transfer 100ug of protein and mix 3 times with 50 uL volume
+        # transfer 100ug of protein and mix 3 times with 50 uL volume
             if (100 / sample_concentrations[i]) > 50:
                 p300.transfer(
                 100 / sample_concentrations[i],
@@ -120,7 +115,7 @@ def run(protocol: protocol_api.ProtocolContext):
         blow_out=True,
         blowout_location='destination well'
     )
-    protocol.pause('Ensure to close tube caps.')
+    protocol.pause('Ensure to close caps on sample tubes.')
 
     # | --------- first incubation --------- |
     temp_mod.set_temperature(55)
@@ -131,7 +126,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment('Cooling down temp block.')
     temp_mod.set_temperature(22)
     protocol.delay(minutes=5, msg='Pausing for 5 minutes to allow tubes to cool down.')
-    protocol.pause('Ensure to open tube caps.')
+    protocol.pause('Ensure to open caps on sample tubes.')
 
     # | --------- transfer IAA to samples on plate --------- |
     protocol.pause('Ensure IAA has been loaded into B6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
@@ -145,7 +140,7 @@ def run(protocol: protocol_api.ProtocolContext):
         blow_out=True,
         blowout_location='destination well'
     )
-    protocol.pause('Close caps and cover tubes with foil')
+    protocol.pause('Close caps on sample tubes and cover tubes with foil')
 
     # | --------- second incubation --------- |
     temp_mod.set_temperature(22)
@@ -156,7 +151,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # | --------- transfer trypsin to samples on plate --------- |
     protocol.pause('Ensure trypsin has been loaded into C6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
-    protocol.pause('Open tube caps')
+    protocol.pause('Open caps on sample tubes on the temperature module')
     p50.transfer(
         volume_of_trypsin,
         trypsin,
