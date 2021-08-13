@@ -52,7 +52,7 @@ Digestion scripts created and developed by Erin Yu Han, Cody Thomas, and Sara We
 
 ## Additional Information
 
-See also the [Opentrons API v2 documentation]https://docs.opentrons.com/v2/).
+See also the [Opentrons API v2 documentation](https://docs.opentrons.com/v2/).
 
 ## Contributing
 
