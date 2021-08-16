@@ -26,19 +26,19 @@ def run(protocol: protocol_api.ProtocolContext):
     # | ---------  tip racks --------- |
     tiprack_300 = protocol.load_labware('opentrons_96_tiprack_300ul', 2)
     tiprack_300_2 = protocol.load_labware('opentrons_96_tiprack_300ul', 3)
-    tiprack_50 = protocol.load_labware('opentrons_96_tiprack_300ul', 1)
+    tiprack_50 = protocol.load_labware('opentrons_96_tiprack_300ul', 1) 
     #tiprack_50_2 = protocol.load_labware('opentrons_96_tiprack_300ul', 6)
 
     # | ---------  pipettes --------- |
     p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300, tiprack_300_2])
-    p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50])
-    p50.starting_tip = tiprack_50.well(starting_tip_p50)
+    p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50]) #change p50 to p20 if p20 will be used here and throughout the script following OT-2 API; this script has not been tested with p20 therefore testing is required.
+    p50.starting_tip = tiprack_50.well(starting_tip_p50) 
     p300.starting_tip = tiprack_300.well(starting_tip_p300)
     p300_aspirate_slow = 25  # Aspiration speed when removing supernatant
     p300_aspirate_default = 150  # Normal aspiration speed by default
     p300_aspirate_fast = 200
-    p50_aspirate_slow = 25  # Aspiration speed when removing supernatant
-    p50_aspirate_default = 150  # Normal aspiration speed by default
+    p50_aspirate_slow = 25  # Aspiration speed when removing supernatant; 
+    p50_aspirate_default = 150  # Normal aspiration speed by default; 
 
     # | ---------  tube racks/plates/containers --------- |
     mag_deck = protocol.load_module('magdeck', 7)
@@ -59,7 +59,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # ---------------------------- COMMANDS ---------------------------- #
 
     # Check total number of samples and replicates
-    if (starting_mag_well + total_samples > 95):
+    if (starting_mag_well + total_samples * 2 > 96):
         raise Exception("Well plate does not have the required number of wells to hold all replicates at that starting position.")
 
     # Function for resuspending beads in a given volume of a specified reagent
@@ -116,9 +116,10 @@ def run(protocol: protocol_api.ProtocolContext):
 
      # Transfer beads, then ACN to the tubes with peptide samples
      protocol.pause('Ensure prepared beads have been loaded into A6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
-     p50.flow_rate.aspirate = p50_aspirate_default
-     p50.flow_rate.dispense = p50_aspirate_default
-
+     p50.flow_rate.aspirate = p50_aspirate_default 
+     p50.flow_rate.dispense = p50_aspirate_default 
+     
+     #change p50 to p20 if needed 
      p50.transfer(
          volume_of_beads,
          beads,
