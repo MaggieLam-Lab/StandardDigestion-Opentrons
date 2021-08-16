@@ -37,7 +37,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # | ---------  pipettes --------- |
     #p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300])
     p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300, tiprack_300_2])
-    p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50, tiprack_50_2])
+    p50 = protocol.load_instrument('p50_single', 'left', tip_racks=[tiprack_50, tiprack_50_2]) #change p50 to p20 if p20 will be used here and throughout the script following OT-2 API; this script has not been tested with p20 therefore testing is required”
     p50.starting_tip = tiprack_50.well(starting_tip_p50)
     p300.starting_tip = tiprack_300.well(starting_tip_p300)
     p300_aspirate_slow = 25  # Aspiration speed when removing supernatant
@@ -103,7 +103,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Transfer 100mM ABC then 100ug of protein from samples to tubes on temp plate. Concentration in tubes will be 1 ug/uL
     mass_of_protein = 100.0
     for i in range(number_of_samples):
-        # transfer ABC
+        # transfer ABC; change 50 to 20 if p20 will be used
         if (mass_of_protein - (mass_of_protein / sample_concentrations[i])) > 50:
             p300.transfer(
                 100 - (mass_of_protein / sample_concentrations[i]),
@@ -125,7 +125,8 @@ def run(protocol: protocol_api.ProtocolContext):
                 blowout_location='destination well'
             )
 
-        # transfer 100ug of protein and mix 3 times with 50 uL volume
+
+        # transfer 100ug of protein and mix 3 times with 50 uL volume; change 50 to 20 if p20 will be used
         if (mass_of_protein / sample_concentrations[i]) > 50:
             p300.transfer(
             mass_of_protein / sample_concentrations[i],
@@ -149,7 +150,7 @@ def run(protocol: protocol_api.ProtocolContext):
             blowout_location='destination well'
             )
 
-    # transfer DTT to tubes on temp plate
+    # transfer DTT to tubes on temp plate and change the mix volume from 50 to 20 if p20 will be used.
     protocol.pause('Ensure DTT has been loaded into A6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
     p50.transfer(
         volume_of_DTT,
@@ -174,7 +175,7 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.delay(minutes=5, msg='Pausing for 5 minutes to allow tubes to cool down.')
     protocol.pause('Ensure to open caps on sample tubes.')
 
-    # transfer IAA to tubes on temp plate
+    # transfer IAA to tubes on temp plate and change the mix volume from 50 to 20 if p20 will be used.
     protocol.pause('Ensure IAA has been loaded into B6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
     p50.transfer(
         volume_of_IAA,
@@ -210,7 +211,7 @@ def run(protocol: protocol_api.ProtocolContext):
             blowout_location='destination well'
         )
 
-    # add beads to samples
+    # add beads to samples 
     protocol.pause('Ensure prepared beads have been loaded into D6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
     p50.transfer(
         volume_of_beads,
@@ -321,7 +322,7 @@ def run(protocol: protocol_api.ProtocolContext):
         blow_out_location='destination well'
     )
 
-    # transfer trypsin to each sample
+    # transfer trypsin to each sample and change the mix volume from 50 to 20 if p20 will be used
     protocol.pause('Ensure trypsin (0.2ug/uL) has been loaded into C6 of the 2ml tube rack located in slot 4 prior to resuming protocol.')
     p50.transfer(
         volume_of_trypsin,
