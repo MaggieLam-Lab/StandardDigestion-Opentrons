@@ -20,7 +20,7 @@ In addition, one helper script is provided in the `misc_scripts` folder:
 
 This protocol requires an Opentrons OT-2 automated liquid handling system along with suitable accessories:
 
-- OT-2 pipettes
+- OT-2 pipettes (P20/P50 and P300)
 - Pipette tips
 - 4-in-1 tube rack set
 - Aluminum block set
@@ -38,10 +38,6 @@ The Opentrons API v2 can be acquired in `pip` via:
 ```
 pip install opentrons
 ```
-
-
-
-Digestion scripts created and developed by Erin Yu Han, Cody Thomas, and Sara Wennersten. 
 
 
 ## Authors
