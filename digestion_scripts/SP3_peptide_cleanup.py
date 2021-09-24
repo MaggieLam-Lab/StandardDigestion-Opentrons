@@ -27,7 +27,7 @@ def run(protocol: protocol_api.ProtocolContext):
     tiprack_300 = protocol.load_labware('opentrons_96_tiprack_300ul', 2)
     tiprack_300_2 = protocol.load_labware('opentrons_96_tiprack_300ul', 3)
     tiprack_50 = protocol.load_labware('opentrons_96_tiprack_300ul', 1) 
-    #tiprack_50_2 = protocol.load_labware('opentrons_96_tiprack_300ul', 6)
+    # tiprack_50_2 = protocol.load_labware('opentrons_96_tiprack_300ul', 6)
 
     # | ---------  pipettes --------- |
     p300 = protocol.load_instrument('p300_single', 'right', tip_racks=[tiprack_300, tiprack_300_2])
@@ -96,7 +96,7 @@ def run(protocol: protocol_api.ProtocolContext):
             curr_mix += 1
 
 
-     Transfer defined mass of peptide from sample to the plate on magnetic module
+    # Transfer defined mass of peptide from sample to the plate on magnetic module
     
      for i in range(len(samples)):
          p300.flow_rate.aspirate = p300_aspirate_slow
