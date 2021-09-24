@@ -119,7 +119,7 @@ def run(protocol: protocol_api.ProtocolContext):
      p50.flow_rate.aspirate = p50_aspirate_default 
      p50.flow_rate.dispense = p50_aspirate_default 
      
-     #change p50 to p20 if needed 
+     # Mixing beads. Change p50 to p20 if needed 
      p50.transfer(
          volume_of_beads,
          beads,
